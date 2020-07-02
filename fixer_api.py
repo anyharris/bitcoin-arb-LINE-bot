@@ -35,7 +35,6 @@ class Fixer:
             }
         }
         """
-        #path = f'/latest?access_key={self.API_KEY}&symbols=USD,THB'
         path = f'/latest?access_key={self.API_KEY}&symbols={curr1},{curr2}'
         response = self._get(path)
         return response
