@@ -4,7 +4,7 @@ I used celery to get some practice and to save a bit of time for when multiple A
 I also like the built in crontab scheduling.
 
 To start the app:
-    celery -A mckee_tasks worker -l -B info
+    celery -A mckee_tasks worker -B -l info
 """
 
 from celery import Celery, chord

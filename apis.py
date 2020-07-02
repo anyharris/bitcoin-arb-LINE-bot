@@ -7,17 +7,19 @@ from dotenv import load_dotenv
 import os
 
 
-class Fixer:
+class RestfulAPI:
+    def _get(self, path):
+        uri = self.API_HOST + path
+        response = requests.get(uri)
+        return response
+
+
+class Fixer(RestfulAPI):
     API_HOST = 'http://data.fixer.io/api/'
 
     def __init__(self):
         load_dotenv()
         self.API_KEY = os.getenv('FIXER_KEY')
-
-    def _get(self, path):
-        uri = self.API_HOST + path
-        response = requests.get(uri)
-        return response
 
     def get_forex(self, curr1, curr2):
         """
@@ -45,11 +47,6 @@ class Fixer:
 
 class Satang:
     API_HOST = 'https://api.tdax.com/api/v3/'
-
-    def _get(self, path):
-        uri = self.API_HOST + path
-        response = requests.get(uri)
-        return response
 
     def get_ticker(self, symbol):
         """
@@ -86,11 +83,6 @@ class Satang:
 
 class Bitstamp:
     API_HOST = 'https://www.bitstamp.net/api/'
-
-    def _get(self, path):
-        uri = self.API_HOST + path
-        response = requests.get(uri)
-        return response
 
     def get_ticker(self):
         """
