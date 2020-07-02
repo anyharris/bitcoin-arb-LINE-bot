@@ -23,9 +23,8 @@ fixer = Fixer()
 
 mckee_app.conf.beat_schedule = {
     """
-    Check the rate spread every minute
+    Check the rate spread every 10 minutes
     Update the fx rate every hour
-    Send a ping every day so that people know it's still working
     """
     'check-rate-spread': {
         'task': 'mckee_tasks.rate_spread',
@@ -85,7 +84,7 @@ def calc_spread(data):
     A message is broadcast on LINE if an arbitrage opportunity is present
 
     :param data: [9245.38, 288700.0]
-    :return: [0.00633688792936527, 'The Satang price is greater than Bitstamp by 0.63%']
+    :return: [0.00633688792936527, 'Satang/Bitstamp spread is 0.63%']
     """
     if data[0] > data[1]:
         satang_price = data[0]
@@ -94,7 +93,7 @@ def calc_spread(data):
         satang_price = data[1]
         bstamp_price = data[0]
     spread = (satang_price - (bstamp_price * xe))/(bstamp_price * xe)
-    message = f'The Satang/Bitstamp spread is at {spread:.2%}'
+    message = f'Satang/Bitstamp spread is {spread:.2%}'
     line.post_broadcast(message)
     return [spread, message]
 

@@ -28,7 +28,7 @@ class Line:
         """
         Sends a broadcast message to everyone who has a chat open with the bot
 
-        :param message: 'The spread fell below the cutoff (currently 0.73%)'
+        :param message: 'Satang/Bitstamp spread is 0.63%'
         :return: {}
         """
         headers = self._headers()
