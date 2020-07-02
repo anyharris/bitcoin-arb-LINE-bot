@@ -45,7 +45,7 @@ class Fixer(RestfulAPI):
         return response
 
 
-class Satang:
+class Satang(RestfulAPI):
     API_HOST = 'https://api.tdax.com/api/v3/'
 
     def get_ticker(self, symbol):
@@ -81,7 +81,7 @@ class Satang:
         return response
 
 
-class Bitstamp:
+class Bitstamp(RestfulAPI):
     API_HOST = 'https://www.bitstamp.net/api/'
 
     def get_ticker(self):
