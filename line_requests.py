@@ -25,6 +25,12 @@ class Line:
         return response
 
     def post_broadcast(self, message):
+        """
+        Sends a broadcast message to everyone who has a chat open with the bot
+
+        :param message: 'The spread fell below the cutoff (currently 0.73%)'
+        :return: {}
+        """
         headers = self._headers()
         path = 'message/broadcast'
         data = '{"messages": [{"type": "text", "text": "%s"}]}' % message

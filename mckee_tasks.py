@@ -1,9 +1,13 @@
 # mckee_tasks.py
-'''
-celery -A mckee_tasks worker -l info
-'''
+"""
+I used celery to get some practice and to save a bit of time for when multiple API calls can be done simultaneously.
+I also like the built in crontab scheduling.
 
-from celery import Celery, chord, chain
+To start the app:
+    celery -A mckee_tasks worker -l -B info
+"""
+
+from celery import Celery, chord
 from celery.utils.log import get_task_logger
 from celery.schedules import crontab
 from line_requests import Line
@@ -20,7 +24,16 @@ satang = Satang()
 line = Line()
 fixer = Fixer()
 
+SPREAD_THRESHOLD = 0.01     # Broadcast if the price difference [(a - b)/b] is greater than this
+REST_TIME = 60*30           # If the price stays above the threshold wait this long to broadcast again
+
+
 mckee_app.conf.beat_schedule = {
+    """
+    Check the rate spread every minute
+    Update the fx rate every hour
+    Send a ping every day so that people know it's still working
+    """
     'check-rate-spread': {
         'task': 'mckee_tasks.rate_spread',
         'schedule': crontab(minute='*/1', hour='*', day_of_week='*'),
@@ -38,23 +51,39 @@ mckee_app.conf.beat_schedule = {
 
 @mckee_app.task(name='mckee_tasks.status_update')
 def status_update():
+    """
+    A ping to show users that the app is still alive
+
+    :return: {}
+    """
     message = f'I am still working'
     return line.post_broadcast(message)
 
 
 @mckee_app.task(name='mckee_tasks.fx_rate')
 def fx_rate():
+    """
+    Keeps the global xe rate variable up to date for the calc_spread task to use
+    Uses the fixer.io free tier forex API which only has EUR as the base pair so we need to do some division
+
+    :return: 31.019741608682857
+    """
     global xe
     # sleep a little bit so that it doesn't interfere with the every minute checks
     time.sleep(20)
     print('Getting exchange rate')
-    fx = fixer.get_forex().json()
+    fx = fixer.get_forex('USD', 'THB').json()
     xe = fx['rates']['THB'] / fx['rates']['USD']
     return xe
 
 
 @mckee_app.task(name='mckee_tasks.satang_rate')
 def satang_rate():
+    """
+    Uses the Satang API to get the current bid price
+
+    :return: 288700.0
+    """
     symbol = 'btc_thb'
     response = satang.get_ticker(symbol).json()
     satang_price = float(response['bidPrice'])
@@ -63,6 +92,11 @@ def satang_rate():
 
 @mckee_app.task(name='mckee_tasks.bstamp_rate')
 def bstamp_rate():
+    """
+    Uses the Bitstamp API to get the current ask price
+
+    :return: 9245.38
+    """
     response = bstamp.get_ticker().json()
     bstamp_price = float(response['ask'])
     return bstamp_price
@@ -70,6 +104,14 @@ def bstamp_rate():
 
 @mckee_app.task(name='mckee_tasks.calc_spread')
 def calc_spread(data):
+    """
+    Takes as input the returns from satang_rate() and bstamp_rate()
+    The order of those returns is random so it checks first to see which is which
+    A message is broadcast on LINE if an arbitrage opportunity is present
+
+    :param data: [9245.38, 288700.0]
+    :return: [0.00633688792936527, 'Spread still lesser, no action']
+    """
     global old_spread
     global last_update_time
     print(old_spread)
@@ -102,6 +144,11 @@ def calc_spread(data):
 
 @mckee_app.task(name='mckee_tasks.rate_spread')
 def rate_spread():
+    """
+    Runs the celery task chord that determines the rate spread and sends LINE messages
+
+    :return: <AsyncResult: ff626389-e044-428b-b02f-f58cd08c438e>
+    """
     return chord([satang_rate.s(), bstamp_rate.s()])(calc_spread.s())
 
 
@@ -109,4 +156,6 @@ def rate_spread():
 xe = None
 old_spread = 0
 last_update_time = 0
+
+# Get the xe rate when the app starts
 fx_rate()
