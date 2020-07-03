@@ -93,7 +93,7 @@ def calc_spread(data):
         satang_price = data[1]
         bstamp_price = data[0]
     spread = (satang_price - (bstamp_price * xe))/(bstamp_price * xe)
-    message = f'Satang/Bitstamp spread is {spread:.2%}'
+    message = f'Satang {satang_price:,.0f} THB, Bitstamp {bstamp_price:,.0f}, spread is {spread:.2%}'
     line.post_broadcast(message)
     return [spread, message]
 
