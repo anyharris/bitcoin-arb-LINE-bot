@@ -11,6 +11,7 @@ from celery import Celery, chord
 from celery.utils.log import get_task_logger
 from celery.schedules import crontab
 from line_requests import Line
+from tg_requests import Telegram
 from apis import Fixer, Satang, Bitstamp
 
 mckee_app = Celery('tasks', backend='redis://localhost:6379/0', broker='pyamqp://guest@localhost//')
@@ -19,6 +20,7 @@ logger = get_task_logger(__name__)
 bstamp = Bitstamp()
 satang = Satang()
 line = Line()
+tg = Telegram()
 fixer = Fixer()
 
 mckee_app.conf.beat_schedule = {
@@ -93,8 +95,9 @@ def calc_spread(data):
         satang_price = data[1]
         bstamp_price = data[0]
     spread = (satang_price - (bstamp_price * xe))/(bstamp_price * xe)
-    message = f'Satang {satang_price:,.0f} THB, Bitstamp {bstamp_price:,.0f} USD, spread is {spread:.2%}'
-    line.post_broadcast(message)
+    message = f'{satang_price:,.0f}, ${bstamp_price:,.0f}, {spread:.2%}'
+    #line.post_broadcast(message)
+    tg.broadcast(message)
     return [spread, message]
 
 
