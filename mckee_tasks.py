@@ -30,7 +30,7 @@ mckee_app.conf.beat_schedule = {
     """
     'check-rate-spread': {
         'task': 'mckee_tasks.rate_spread',
-        'schedule': crontab(minute='*/10', hour='*', day_of_week='*'),
+        'schedule': crontab(minute='*/5', hour='*', day_of_week='*'),
     },
     'check-forex-rate': {
         'task': 'mckee_tasks.fx_rate',
